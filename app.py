@@ -27,11 +27,14 @@ display_mode = st.sidebar.radio(
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("เลือกวัตถุที่ต้องการแสดงผล")
-default_classes = ['car', 'truck', 'bus', 'trafficlight', 'road']
+desired_defaults = ['car', 'truck', 'bus', 'traffic light', 'road'] 
+
+valid_defaults = [cls for cls in desired_defaults if cls in CLASS_NAMES.values()]
+
 selected_class_names = st.sidebar.multiselect(
     "กรองประเภทวัตถุ:", 
     options=list(CLASS_NAMES.values()), 
-    default=default_classes
+    default=valid_defaults
 )
 
 selected_class_indices = [k for k, v in CLASS_NAMES.items() if v in selected_class_names]
