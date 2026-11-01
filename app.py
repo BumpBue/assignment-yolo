@@ -65,7 +65,9 @@ if uploaded_file is not None:
 
             # ฟังก์ชัน plot ของ YOLO กำหนดเปิด/ปิด boxes และ masks ตาม checkbox ได้
             plotted_img = res.plot(boxes=show_bbox, masks=show_poly)
-            st.image(plotted_img, use_column_width=True)
+            # แปลงสีจาก BGR เป็น RGB ด้วย Numpy slicing
+            plotted_img_rgb = plotted_img[:, :, ::-1] 
+            st.image(plotted_img_rgb, use_column_width=True)
             
             st.markdown("---")
             st.subheader("สรุปจำนวนวัตถุที่ตรวจพบ")
