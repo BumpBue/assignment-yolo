@@ -3,7 +3,8 @@ from PIL import Image
 from ultralytics import YOLO
 import numpy as np
 
-st.set_page_config(page_title="Traffic & Vehicle Detection", page_icon="🚦", layout="wide")
+# ลบอีโมจิออก และคงรูปแบบการตั้งค่าหน้าเว็บแบบกว้าง
+st.set_page_config(page_title="Traffic & Vehicle Detection", layout="wide")
 
 @st.cache_resource
 def load_models():
@@ -28,7 +29,6 @@ show_poly = st.sidebar.checkbox("ระบายสีทับ (Polygon / Segme
 st.sidebar.markdown("---")
 st.sidebar.subheader("เลือกวัตถุที่ต้องการแสดงผล")
 
-# คัดกรองค่าเริ่มต้นให้ตรงกับคลาสในโมเดลเพื่อป้องกัน Error
 desired_defaults = ['car', 'truck', 'bus', 'traffic light', 'road']
 valid_defaults = [cls for cls in desired_defaults if cls in CLASS_NAMES.values()]
 
@@ -57,15 +57,13 @@ if uploaded_file is not None:
         if not (show_bbox or show_poly):
             st.warning("กรุณาติ๊กเลือกรูปแบบการแสดงผลอย่างน้อย 1 แบบ (ตีกรอบ หรือ ระบายสี) ที่แถบด้านซ้าย")
         elif len(selected_class_indices) > 0:
-            # ถ้าเลือกระบายสีด้วยบังคับใช้ model_poly ถ้าใช้แค่กรอบสี่เหลี่ยมสามารถใช้ model_bbox ได้
             model = model_poly if show_poly else model_bbox
             
-            results = model.predict(source=image, conf=conf_threshold, classes=selected_class_indices)
+            # บังคับใช้ imgsz=800 เพื่อให้ตรงกับขนาดที่โมเดลถูกฝึกมา
+            results = model.predict(source=image, conf=conf_threshold, classes=selected_class_indices, imgsz=800)
             res = results[0]
 
-            # ฟังก์ชัน plot ของ YOLO กำหนดเปิด/ปิด boxes และ masks ตาม checkbox ได้
             plotted_img = res.plot(boxes=show_bbox, masks=show_poly)
-            # แปลงสีจาก BGR เป็น RGB ด้วย Numpy slicing
             plotted_img_rgb = plotted_img[:, :, ::-1] 
             st.image(plotted_img_rgb, use_column_width=True)
             
