@@ -20,15 +20,16 @@ uploaded_file = st.sidebar.file_uploader("อัปโหลดรูปภา�
 
 conf_threshold = st.sidebar.slider("ความแม่นยำขั้นต่ำ (Confidence)", min_value=0.0, max_value=1.0, value=0.25, step=0.05)
 
-display_mode = st.sidebar.radio(
-    "เลือกรูปแบบการตรวจจับ:",
-    ("ตีกรอบสี่เหลี่ยม (Object Detection)", "ระบายสีทับ (Instance Segmentation)")
-)
+st.sidebar.markdown("---")
+st.sidebar.markdown("**เลือกรูปแบบการแสดงผล:**")
+show_bbox = st.sidebar.checkbox("ตีกรอบสี่เหลี่ยม (Bounding Box)", value=True)
+show_poly = st.sidebar.checkbox("ระบายสีทับ (Polygon / Segmentation)", value=True)
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("เลือกวัตถุที่ต้องการแสดงผล")
-desired_defaults = ['car', 'truck', 'bus', 'traffic light', 'road'] 
 
+# คัดกรองค่าเริ่มต้นให้ตรงกับคลาสในโมเดลเพื่อป้องกัน Error
+desired_defaults = ['car', 'truck', 'bus', 'traffic light', 'road']
 valid_defaults = [cls for cls in desired_defaults if cls in CLASS_NAMES.values()]
 
 selected_class_names = st.sidebar.multiselect(
@@ -47,19 +48,23 @@ if uploaded_file is not None:
     
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("📷 ภาพต้นฉบับ")
+        st.subheader("ภาพต้นฉบับ")
         st.image(image, use_column_width=True)
 
     with col2:
         st.subheader("ผลลัพธ์จาก AI")
         
-        model = model_bbox if display_mode == "ตีกรอบสี่เหลี่ยม (Object Detection)" else model_poly
-
-        if len(selected_class_indices) > 0:
+        if not (show_bbox or show_poly):
+            st.warning("กรุณาติ๊กเลือกรูปแบบการแสดงผลอย่างน้อย 1 แบบ (ตีกรอบ หรือ ระบายสี) ที่แถบด้านซ้าย")
+        elif len(selected_class_indices) > 0:
+            # ถ้าเลือกระบายสีด้วยบังคับใช้ model_poly ถ้าใช้แค่กรอบสี่เหลี่ยมสามารถใช้ model_bbox ได้
+            model = model_poly if show_poly else model_bbox
+            
             results = model.predict(source=image, conf=conf_threshold, classes=selected_class_indices)
             res = results[0]
 
-            plotted_img = res.plot()
+            # ฟังก์ชัน plot ของ YOLO กำหนดเปิด/ปิด boxes และ masks ตาม checkbox ได้
+            plotted_img = res.plot(boxes=show_bbox, masks=show_poly)
             st.image(plotted_img, use_column_width=True)
             
             st.markdown("---")
